@@ -22,8 +22,6 @@ $ cargo run
 The following examples use `curl` to illustrate the functionality.
 
 
-### List files
-
 1. List the files at the path `/home/jstubbs/projects/rust/tmp`:
 
 ```
@@ -55,7 +53,26 @@ $ curl -d @test localhost:8000/contents/home/jstubbs/projects/rust/tmp/testup | 
 }
 ```
 
-3. Stream down the contents of the `testup` file we just uploaded:
+3. Check that the new `testup` file now shows up in the listing:
+
+```
+$ curl localhost:8000/list/home/jstubbs/projects/rust/tmp | jq
+
+{
+  "status": "success",
+  "message": "file listing returned suceesfully",
+  "result": [
+    "hello",
+    "test",
+    "testup"
+  ],
+  "meta": "none",
+  "version": "0.1.0"
+}
+```
+
+
+4. Stream down the contents of the `testup` file we just uploaded:
 
 ```
 $ curl localhost:8000/contents/home/jstubbs/projects/rust/tmp/testup
