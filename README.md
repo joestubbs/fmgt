@@ -1,7 +1,9 @@
 # fmgt Web Server
 `fmgt` is a lightweight webserver, written in Rust using the Rocket framework, providing
 HTTP APIs for basic file management tasks. The server includes endpoints for listing file paths,
-uploading and downloading files. An OpenAPI v3 specification is included.
+uploading and downloading files. When built with `--release` on Linux, the resulting binary is ~8MB.
+
+An OpenAPI v3 specification is included.
 
 ## Building the Project
 The project requires a recent version of Rust (e.g., 1.57.0); install using `rustup`. With rust
