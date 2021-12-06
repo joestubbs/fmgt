@@ -22,5 +22,42 @@ $ cargo run
 The following examples use `curl` to illustrate the functionality.
 
 
+### List files
 
+1. List the files at the path `/home/jstubbs/projects/rust/tmp`:
+
+```
+$ curl localhost:8000/list/home/jstubbs/projects/rust/tmp | jq
+
+{
+  "status": "success",
+  "message": "file listing returned suceesfully",
+  "result": [
+    "hello",
+    "test"
+  ],
+  "meta": "none",
+  "version": "0.1.0"
+}
+```
+
+2. Upload a file `testup` with contents "this is a test" to the `/home/jstubbs/projects/rust/tmp` directory:
+
+```
+$ curl -d @test localhost:8000/contents/home/jstubbs/projects/rust/tmp/testup | jq
+
+{
+  "status": "success",
+  "message": "file uploaded suceesfully",
+  "result": "",
+  "meta": "none",
+  "version": "0.1.0"
+}
+```
+
+3. Stream down the contents of the `testup` file we just uploaded:
+
+```
+$ curl localhost:8000/contents/home/jstubbs/projects/rust/tmp/testup
+this is a test
 
