@@ -1,9 +1,10 @@
+use std::io;
 use std::path::PathBuf;
 use std::fs;
 #[macro_use] extern crate rocket;
 // use rocket::data::{Data, ToByteUnit};
 use rocket::Data;
-use rocket::serde::Serialize;
+use rocket::serde::{Deserialize, Serialize};
 use rocket::serde::json::Json;
 use rocket::fs::NamedFile;
 use rocket::data::ByteUnit;
@@ -25,6 +26,11 @@ struct JSONResponse<T: Serialize>{
     result: T,
     meta: String,
     version: String,
+}
+
+#[derive(Deserialize)]
+struct MakedirRequest<'r>{
+    directory: &'r str
 }
 
 
@@ -157,6 +163,54 @@ fn list(path: PathBuf) -> Json<JSONResponse<Vec<String>>> {
     Json(rsp)
 }
 
+#[post("/makedir/<path..>", data="<data>")]
+fn makedir(path: PathBuf, data:Json<MakedirRequest>) -> Json<JSONResponse<Vec<String>>>{
+    // This route ensures the directory `dir` inside the mesage body at path `path` exists.
+    // prepend the root directory to the `path` paramter.
+    let mut full_path = PathBuf::from(ROOT_DIR);
+    full_path.push(path);
+    println!("full path: {:?}", path_buf_to_str(&full_path));
+    
+    // check if `full_path` actually exists ---
+    if !full_path.exists() {
+        let message = String::from(format!("Invalid path; path {:?} does not exist", path_buf_to_str(&full_path)));
+        let rsp = make_error_rsp(message);
+        return Json(rsp);
+    };
+    
+    // parse the POST body ---
+    full_path.push(data.directory);
+    println!("full path with directory body: {:?}", path_buf_to_str(&full_path));
+
+    // create the full directory path to ensure it exists
+    let result = fs::create_dir_all(&full_path);
+    match result {
+        Err(e) => {
+            let message = String::from(format!("Unable to make directory; error: {}", e));
+            let rsp = make_error_rsp(message);
+            return Json(rsp);
+        },
+        Ok(_r) => ()
+    }
+
+    // let result = fs::create_dir_all(&full_path).unwrap_or_else( |error| {
+    //     let message = String::from(format!("Unable to make directory; error: {}", error));
+    //     let rsp = make_error_rsp(message);
+    //     Json(rsp)
+    // });
+
+    let empty: Vec<String> = Vec::new();
+    let rsp = JSONResponse{
+        status: String::from("success"),
+        message: String::from("directory creaated suceesfully"), 
+        result: empty,
+        meta: String::from("none"),
+        version: String::from("0.1.0"),
+    };
+    Json(rsp)
+
+}
+
 #[get("/contents/<path..>")]
 async fn get_file(path: PathBuf) -> Result<NamedFile, NotFound<String>> {
     let mut full_path = PathBuf::from(ROOT_DIR);
@@ -193,5 +247,5 @@ async fn post_file(path: PathBuf, data: Data<'_>) -> Json<JSONResponse<String>> 
 fn rocket() -> _ {
     rocket::build()
     .mount("/status", routes![ready])
-    .mount("/", routes![list, get_file, post_file])
+    .mount("/", routes![list, get_file, post_file, makedir])
 }
